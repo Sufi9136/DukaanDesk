@@ -1,10 +1,12 @@
 <?php
-// ---- Database settings: Render + Aiven MySQL ----
+
+// ---- Database settings: Local XAMPP + Render/Aiven ----
 $db_host = getenv('DB_HOST') ?: 'localhost';
 $db_port = getenv('DB_PORT') ?: '3306';
 $db_name = getenv('DB_NAME') ?: 'shop_billing_db';
 $db_user = getenv('DB_USER') ?: 'root';
 $db_pass = getenv('DB_PASS') ?: '';
+
 define('APP_NAME', 'DukaanDesk');
 
 // ---- Shop details ----
@@ -29,15 +31,20 @@ try {
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+05:30'",
     ];
 
-    // Use TLS for the hosted database.
+    // Use Aiven's CA certificate on Render.
     if (getenv('DB_HOST')) {
-        $options[PDO::MYSQL_ATTR_SSL_CA] =
-            getenv('DB_SSL_CA') ?: '/etc/ssl/certs/ca-certificates.crt';
+        $caPath = __DIR__ . '/../ca.pem';
+
+        if (!is_readable($caPath)) {
+            throw new RuntimeException('Aiven CA certificate is missing or unreadable.');
+        }
+
+        $options[PDO::MYSQL_ATTR_SSL_CA] = $caPath;
     }
 
     $db = new PDO($dsn, $db_user, $db_pass, $options);
 
-} catch (PDOException $e) {
+} catch (Throwable $e) {
     error_log('DukaanDesk database connection failed: ' . $e->getMessage());
 
     http_response_code(500);
