@@ -29,10 +29,20 @@ $menu = array(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= h($page_title) ?> - <?= h(APP_NAME) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d9488">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="DukaanDesk">
 </head>
 <body>
 
@@ -40,7 +50,8 @@ $menu = array(
     <aside class="sidebar" id="sidebar">
         <div class="brand">
             <i class="bi bi-shop"></i>
-            <span><?= h(APP_NAME) ?></span>
+            <span class="app-name-side"><b>Dukaan</b>Desk</span>
+            <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
         </div>
 
         <?php foreach ($menu as $menu_group => $menu_links): ?>
@@ -66,20 +77,21 @@ $menu = array(
             </ul>
         <?php endforeach; ?>
     </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <div class="main">
         <header class="topbar no-print">
             <button class="btn btn-light btn-sm" id="menuBtn" type="button"><i class="bi bi-list fs-5"></i></button>
-            <h5 class="mb-0 ms-3"><?= h($page_title) ?></h5>
+            <h5 class="mb-0 ms-3 text-truncate"><?= h($page_title) ?></h5>
 
             <div class="ms-auto d-flex align-items-center gap-2">
                 <span class="d-none d-md-inline text-muted small">
                     <?= h($_SESSION['name']) ?>
                     <span class="badge bg-secondary"><?= h(role_name($_SESSION['role'])) ?></span>
                 </span>
-                <a href="profile.php" class="btn btn-outline-primary btn-sm"><i class="bi bi-person"></i> Profile</a>
+                <a href="profile.php" class="btn btn-outline-primary btn-sm"><i class="bi bi-person"></i><span class="d-none d-sm-inline"> Profile</span></a>
                 <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                    <i class="bi bi-box-arrow-right"></i> Logout
+                    <i class="bi bi-box-arrow-right"></i><span class="d-none d-sm-inline"> Logout</span>
                 </button>
             </div>
         </header>

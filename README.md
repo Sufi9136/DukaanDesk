@@ -8,13 +8,15 @@ and to see sales reports.
 ## How to run
 
 1. Install XAMPP and start **Apache** and **MySQL** from the control panel.
-2. Copy the `shop_billing` folder to `C:\xampp\htdocs\`
-   (so that `C:\xampp\htdocs\shop_billing\login.php` exists).
+2. Copy the `DukaanDesk` folder to `C:\xampp\htdocs\`
+   (so that `C:\xampp\htdocs\DukaanDesk\login.php` exists).
 3. Open `http://localhost/phpmyadmin`, click **Import**, choose `sql/shop_billing.sql`, click **Go**.
    This creates the database `shop_billing_db` with sample data.
-4. Open `http://localhost/shop_billing/` in the browser.
+4. Open `http://localhost/DukaanDesk/` in the browser.
 
 Internet is needed on the first load because Bootstrap, Chart.js and DataTables are loaded from CDN.
+
+To put it online or make an Android app, read **HOSTING.md**.
 
 The software name (DukaanDesk) and the shop name, address and phone (printed on the invoice) are at the top of `config/db.php`.
 If your MySQL has a password, change it in the same file.

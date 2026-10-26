@@ -1,3 +1,34 @@
+<?php
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/inc/functions.php';
+
+if (!empty($_SESSION['uid'])) {
+    go('dashboard.php');
+}
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    $st = $db->prepare('SELECT * FROM users WHERE username = ?');
+    $st->execute(array($username));
+    $user = $st->fetch();
+
+    if ($user && password_verify($password, $user['password'])) {
+        session_regenerate_id(true);
+        $_SESSION['uid']  = $user['id'];
+        $_SESSION['name'] = $user['full_name'];
+        $_SESSION['role'] = $user['role'];
+        flash('success', 'Welcome back, ' . $user['full_name'] . '!');
+        go('dashboard.php');
+    }
+    $error = 'Wrong username or password.';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

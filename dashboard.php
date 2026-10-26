@@ -38,10 +38,28 @@ $recent = $db->query("SELECT b.id, b.bill_no, b.total, b.created_at, c.name AS c
 $lowList = $db->query("SELECT name, stock, min_stock FROM products
                        WHERE stock <= min_stock ORDER BY stock ASC LIMIT 7")->fetchAll();
 
+// public sites get guessed, so remind people to replace the sample passwords
+$st = $db->prepare('SELECT password FROM users WHERE id = ?');
+$st->execute(array($_SESSION['uid']));
+$myHash = $st->fetchColumn();
+$defaultPassword = false;
+foreach (array('admin123', 'cashier123', 'stock123') as $sample) {
+    if (password_verify($sample, $myHash)) {
+        $defaultPassword = true;
+    }
+}
+
 $page_title = 'Dashboard';
 $active = 'dashboard';
 include 'inc/header.php';
 ?>
+
+<?php if ($defaultPassword): ?>
+    <div class="alert alert-warning">
+        <i class="bi bi-shield-exclamation"></i>
+        You are still using the sample password. Please <a href="profile.php" class="alert-link">change it</a> now.
+    </div>
+<?php endif; ?>
 
 <?php if (can('billing')): ?>
     <div class="mb-3">
