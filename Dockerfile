@@ -5,7 +5,9 @@ RUN a2enmod rewrite
 
 COPY . /var/www/html/
 
-RUN echo "=== CHECKING COPIED PROJECT FILES ===" && ls -la /var/www/html/ && test -f /var/www/html/index.php && echo "SUCCESS: index.php exists"
+RUN printf '<Directory /var/www/html/>\n    Options FollowSymLinks\n    AllowOverride All\n    Require all granted\n</Directory>\nDirectoryIndex index.php index.html\n' > /etc/apache2/conf-available/dukaandesk.conf 
+&& a2enconf dukaandesk 
+&& test -f /var/www/html/index.php
 
 RUN chown -R www-data:www-data /var/www/html/
 
