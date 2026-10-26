@@ -1,67 +1,148 @@
 <?php
-// ---- database settings ----
-// default XAMPP user is root with an empty password.
-// On a web host, use the values shown in the host's MySQL page instead (see HOSTING.md)
-$db_host = 'localhost';
-$db_name = 'shop_billing_db';
-$db_user = 'root';
-$db_pass = '';
 
-// name of the software
+// ==================================================
+// DATABASE SETTINGS
+// Local: XAMPP
+// Hosted: Render + Aiven MySQL
+// ==================================================
+
+$db_host = getenv('DB_HOST') ?: 'localhost';
+$db_port = getenv('DB_PORT') ?: '3306';
+$db_name = getenv('DB_NAME') ?: 'shop_billing_db';
+$db_user = getenv('DB_USER') ?: 'root';
+$db_pass = getenv('DB_PASS') ?: '';
+
+
+// ==================================================
+// APPLICATION SETTINGS
+// ==================================================
+
 define('APP_NAME', 'DukaanDesk');
 
-// ---- shop details (these show on the invoice) ----
 define('SHOP_NAME', 'Sharma General Store');
 define('SHOP_ADDRESS', 'Main Market Road, Your City - 400001');
 define('SHOP_PHONE', '98765 43210');
-define('SHOP_GSTIN', '');          // leave empty if the shop has no GST number
+define('SHOP_GSTIN', '');
 
-// set to true only while fixing a problem, it shows the real error on the page
 define('DEBUG', false);
+
 ini_set('display_errors', DEBUG ? '1' : '0');
 
 date_default_timezone_set('Asia/Kolkata');
 
-// session cookie: not readable by javascript, and sent only over https when the site uses https
-$is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-         || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-session_set_cookie_params(array(
+
+// ==================================================
+// SESSION SETTINGS
+// ==================================================
+
+$is_https = (
+    !empty($_SERVER['HTTPS']) &&
+    $_SERVER['HTTPS'] !== 'off'
+) || (
+    isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+    $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+);
+
+session_set_cookie_params([
     'lifetime' => 0,
-    'path'     => '/',
-    'secure'   => $is_https,
+    'path' => '/',
+    'secure' => $is_https,
     'httponly' => true,
     'samesite' => 'Lax',
-));
-session_start();
+]);
 
-// a clean message instead of a blank page if something unexpected breaks
-set_exception_handler(function ($e) {
-    error_log($e->getMessage());
-    http_response_code(500);
-    echo '<h3>Something went wrong.</h3><p>Please go back and try again.</p>';
-    if (DEBUG) {
-        echo '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
-    }
-});
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+
+// ==================================================
+// DATABASE CONNECTION
+// ==================================================
 
 try {
+
+    $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
+
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+05:30'",
+        PDO::ATTR_TIMEOUT => 10,
+    ];
+
+    // Use the Aiven CA certificate for hosted connections.
+    // Local XAMPP does not require this certificate.
+    if (getenv('DB_HOST')) {
+
+        $caPath = __DIR__ . '/../ca.pem';
+
+        if (!is_readable($caPath)) {
+            throw new RuntimeException(
+                'Aiven CA certificate is missing or unreadable.'
+            );
+        }
+
+        $options[PDO::MYSQL_ATTR_SSL_CA] = $caPath;
+    }
+
     $db = new PDO(
-        "mysql:host=$db_host;dbname=$db_name;charset=utf8mb4",
+        $dsn,
         $db_user,
         $db_pass,
-        array(
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            // keep mysql time same as php time
-            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+05:30'",
-        )
+        $options
     );
-} catch (PDOException $e) {
-    error_log($e->getMessage());
-    echo '<h3>Could not connect to the database.</h3>'
-        . '<p>Check that MySQL is running and that the values at the top of config/db.php are correct.</p>';
+
+} catch (Throwable $e) {
+
+    error_log(
+        'DukaanDesk database connection failed: ' .
+        $e->getMessage()
+    );
+
+    http_response_code(500);
+
+    echo '<h3>Could not connect to the database.</h3>';
+    echo '<p>Please check the database configuration and connection.</p>';
+
     if (DEBUG) {
-        echo '<small>' . htmlspecialchars($e->getMessage()) . '</small>';
+        echo '<pre>' .
+            htmlspecialchars(
+                $e->getMessage(),
+                ENT_QUOTES,
+                'UTF-8'
+            ) .
+            '</pre>';
     }
+
     exit;
 }
+
+
+// ==================================================
+// GLOBAL EXCEPTION HANDLER
+// ==================================================
+
+set_exception_handler(function ($e) {
+
+    error_log(
+        'DukaanDesk application error: ' .
+        $e->getMessage()
+    );
+
+    http_response_code(500);
+
+    echo '<h3>Something went wrong.</h3>';
+    echo '<p>Please go back and try again.</p>';
+
+    if (DEBUG) {
+        echo '<pre>' .
+            htmlspecialchars(
+                $e->getMessage(),
+                ENT_QUOTES,
+                'UTF-8'
+            ) .
+            '</pre>';
+    }
+});
