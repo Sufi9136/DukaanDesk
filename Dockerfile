@@ -5,10 +5,7 @@ RUN a2enmod rewrite
 
 COPY . /var/www/html/
 
-RUN echo "=== CHECKING COPIED PROJECT FILES ===" 
-&& ls -la /var/www/html/ 
-&& test -f /var/www/html/index.php 
-&& echo "SUCCESS: index.php exists"
+RUN echo "=== CHECKING COPIED PROJECT FILES ===" && ls -la /var/www/html/ && test -f /var/www/html/index.php && echo "SUCCESS: index.php exists"
 
 RUN chown -R www-data:www-data /var/www/html/
 
